@@ -45,15 +45,15 @@ export function useSessionsOverview() {
     queryKey: ["sessions-overview"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("sessions_overview_view")
+        .from("sessions_overview_view" as never)
         .select("*")
         .order("hour_bucket", { ascending: false })
-        .limit(168); // Last 7 days of hourly data
+        .limit(168);
       
       if (error) throw error;
       return (data || []) as SessionOverview[];
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 }
 
@@ -62,10 +62,10 @@ export function useAnomalyTimeSeries() {
     queryKey: ["anomaly-time-series"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("anomaly_time_series_view")
+        .from("anomaly_time_series_view" as never)
         .select("*")
         .order("hour_bucket", { ascending: false })
-        .limit(48); // Last 48 hours
+        .limit(48);
       
       if (error) throw error;
       return (data || []) as AnomalyData[];
@@ -79,7 +79,7 @@ export function useNavigationFlow() {
     queryKey: ["navigation-flow"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("navigation_flow_view")
+        .from("navigation_flow_view" as never)
         .select("*")
         .order("transition_count", { ascending: false })
         .limit(20);
@@ -96,7 +96,7 @@ export function useScrollDepthDistribution() {
     queryKey: ["scroll-depth-distribution"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("scroll_depth_distribution_view")
+        .from("scroll_depth_distribution_view" as never)
         .select("*")
         .order("day_bucket", { ascending: false })
         .limit(100);
@@ -113,7 +113,7 @@ export function useSectionDwell() {
     queryKey: ["section-dwell"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("section_dwell_agg_view")
+        .from("section_dwell_agg_view" as never)
         .select("*")
         .order("day_bucket", { ascending: false })
         .limit(50);
@@ -131,14 +131,14 @@ export function useLiveSessionCount() {
     queryFn: async () => {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
       const { count, error } = await supabase
-        .from("sessions")
+        .from("sessions" as never)
         .select("*", { count: "exact", head: true })
         .gte("started_at", oneHourAgo);
       
       if (error) throw error;
       return count || 0;
     },
-    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchInterval: 10000,
   });
 }
 
@@ -147,9 +147,9 @@ export function useTotalStats() {
     queryKey: ["total-stats"],
     queryFn: async () => {
       const [sessionsResult, eventsResult, auditResult] = await Promise.all([
-        supabase.from("sessions").select("*", { count: "exact", head: true }),
-        supabase.from("events").select("*", { count: "exact", head: true }),
-        supabase.from("privacy_audit").select("*", { count: "exact", head: true }),
+        supabase.from("sessions" as never).select("*", { count: "exact", head: true }),
+        supabase.from("events" as never).select("*", { count: "exact", head: true }),
+        supabase.from("privacy_audit" as never).select("*", { count: "exact", head: true }),
       ]);
       
       return {

@@ -5,9 +5,15 @@ import { MetricCard } from "@/components/MetricCard";
 import { TableDisplay } from "@/components/TableDisplay";
 import { CodeBlock } from "@/components/CodeBlock";
 import { StatusIndicator } from "@/components/StatusIndicator";
+import { QueryHistoryPanel } from "@/components/QueryHistoryPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useSectionTracking } from "@/hooks/useAnalytics";
+import { useSaveQuery, QueryHistoryEntry } from "@/hooks/useQueryHistory";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { Save, Send } from "lucide-react";
 
 const SAMPLE_PAYLOADS = {
   session_start: {
@@ -67,8 +73,27 @@ const EVENT_DEFINITIONS = [
   { type: "contact_intent", required: "-", bounds: "-" },
 ];
 
+// Mock system response
+const MOCK_RESPONSE = {
+  signal: "Primary constraint identified: dependency chain creates cascading failure risk",
+  constraint: "Resource allocation bottleneck at processing layer limits throughput ceiling",
+  structural_risk: "Current architecture couples critical paths, preventing independent scaling",
+  strategic_vector: "Decouple processing units before scaling horizontally to maintain resilience",
+  diagnostics: {
+    confidence: 0.87,
+    analysis_depth: "structural",
+    secondary_effects: ["latency variance", "cache invalidation complexity"]
+  }
+};
+
 export default function Index() {
   const [currentTime, setCurrentTime] = useState(new Date().toISOString());
+  const [queryInput, setQueryInput] = useState("");
+  const [showResponse, setShowResponse] = useState(false);
+  const [selectedQuery, setSelectedQuery] = useState<QueryHistoryEntry | null>(null);
+  
+  const { user } = useAuth();
+  const saveQuery = useSaveQuery();
 
   // Section tracking refs for dwell time measurement
   const metricsRef = useSectionTracking("index_metrics");
@@ -84,9 +109,40 @@ export default function Index() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSubmitQuery = () => {
+    if (!queryInput.trim()) return;
+    setShowResponse(true);
+    
+    // Save query if authenticated
+    if (user) {
+      saveQuery.mutate({
+        query_input: queryInput,
+        response_signal: MOCK_RESPONSE.signal,
+        response_constraint: MOCK_RESPONSE.constraint,
+        response_structural_risk: MOCK_RESPONSE.structural_risk,
+        response_strategic_vector: MOCK_RESPONSE.strategic_vector,
+        response_diagnostics: MOCK_RESPONSE.diagnostics,
+        status: "complete",
+      }, {
+        onSuccess: () => {
+          toast.success("Query archived.");
+        },
+        onError: () => {
+          toast.error("Archive failed.");
+        }
+      });
+    }
+  };
+
+  const handleSelectQuery = (query: QueryHistoryEntry) => {
+    setSelectedQuery(query);
+    setQueryInput(query.query_input);
+    setShowResponse(query.status === "complete");
+  };
+
   return (
     <div className="min-h-screen bg-background font-sans">
-      <SystemHeader systemStatus="online" version="v1.0.0-day6" />
+      <SystemHeader systemStatus="online" version="v1.0.0" />
       
       <main className="container py-8 space-y-8">
         {/* Status Banner */}
@@ -95,17 +151,116 @@ export default function Index() {
             <div className="flex items-center gap-3">
               <StatusIndicator status="online" />
               <div>
-                <p className="font-mono text-sm text-foreground">System initialized. Awaiting ingestion events.</p>
+                <p className="font-mono text-sm text-foreground">System initialized. Awaiting input.</p>
                 <p className="font-mono text-xs text-muted-foreground mt-1">
-                  Endpoint: POST /functions/v1/ingest
+                  Strategic analysis and diagnostic processing active.
                 </p>
               </div>
             </div>
             <Link to="/dashboard">
               <Button variant="outline" size="sm" className="font-mono text-xs">
-                View Dashboard →
+                View Analytics →
               </Button>
             </Link>
+          </div>
+        </div>
+
+        {/* Query Interface */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="border border-border rounded-md bg-card p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                  Strategic Query Interface
+                </h2>
+                {user && (
+                  <span className="font-mono text-[10px] text-signal-nominal flex items-center gap-1">
+                    <Save className="h-3 w-3" />
+                    Auto-archive enabled
+                  </span>
+                )}
+              </div>
+              
+              <Textarea
+                value={queryInput}
+                onChange={(e) => setQueryInput(e.target.value)}
+                placeholder="Enter strategic problem, constraint, or system state for analysis..."
+                className="font-mono text-sm bg-secondary/30 border-border min-h-[120px] resize-none"
+              />
+              
+              <div className="flex items-center justify-between mt-4">
+                <p className="font-mono text-[10px] text-muted-foreground">
+                  {queryInput.length} characters
+                </p>
+                <Button
+                  onClick={handleSubmitQuery}
+                  disabled={!queryInput.trim()}
+                  className="font-mono text-xs gap-2"
+                >
+                  <Send className="h-3 w-3" />
+                  Process Query
+                </Button>
+              </div>
+            </div>
+
+            {/* Response Display */}
+            {showResponse && (
+              <div className="border border-primary/30 rounded-md bg-card/50 p-6 space-y-6">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-signal-nominal animate-pulse" />
+                  <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                    Analysis Complete
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="border-l-2 border-primary pl-4">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-primary">Signal</span>
+                    <p className="font-mono text-sm text-foreground mt-1">
+                      {selectedQuery?.response_signal || MOCK_RESPONSE.signal}
+                    </p>
+                  </div>
+
+                  <div className="border-l-2 border-signal-warning pl-4">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-signal-warning">Constraint</span>
+                    <p className="font-mono text-sm text-foreground mt-1">
+                      {selectedQuery?.response_constraint || MOCK_RESPONSE.constraint}
+                    </p>
+                  </div>
+
+                  <div className="border-l-2 border-signal-critical pl-4">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-signal-critical">Structural Risk</span>
+                    <p className="font-mono text-sm text-foreground mt-1">
+                      {selectedQuery?.response_structural_risk || MOCK_RESPONSE.structural_risk}
+                    </p>
+                  </div>
+
+                  <div className="border-l-2 border-signal-nominal pl-4">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-signal-nominal">Strategic Vector</span>
+                    <p className="font-mono text-sm text-foreground mt-1">
+                      {selectedQuery?.response_strategic_vector || MOCK_RESPONSE.strategic_vector}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Diagnostics</span>
+                  <CodeBlock
+                    title="System Metadata"
+                    code={JSON.stringify(
+                      selectedQuery?.response_diagnostics || MOCK_RESPONSE.diagnostics, 
+                      null, 
+                      2
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Query History Sidebar */}
+          <div className="lg:col-span-1">
+            <QueryHistoryPanel onSelectQuery={handleSelectQuery} />
           </div>
         </div>
 
@@ -202,7 +357,7 @@ export default function Index() {
         {/* Footer */}
         <footer className="border-t border-border pt-6 flex items-center justify-between">
           <p className="font-mono text-[10px] text-muted-foreground">
-            PRIVACY-FIRST ANALYTICS SYSTEM · DAY 6 MIGRATION
+            STRATUM · STRATEGIC ANALYSIS SYSTEM
           </p>
           <p className="font-mono text-[10px] text-muted-foreground">
             {currentTime.replace("T", " ").slice(0, 19)} UTC

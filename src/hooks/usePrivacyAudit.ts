@@ -21,7 +21,7 @@ export function usePrivacyAudit(limit = 100, dateRange?: DateRange) {
     queryKey: ["privacy-audit", limit, dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
     queryFn: async () => {
       let query = supabase
-        .from("privacy_audit")
+        .from("privacy_audit" as never)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
@@ -53,22 +53,22 @@ export function usePrivacyAuditStats() {
 
       const [last24h, last7d, byReason] = await Promise.all([
         supabase
-          .from("privacy_audit")
+          .from("privacy_audit" as never)
           .select("*", { count: "exact", head: true })
           .gte("created_at", oneDayAgo),
         supabase
-          .from("privacy_audit")
+          .from("privacy_audit" as never)
           .select("*", { count: "exact", head: true })
           .gte("created_at", sevenDaysAgo),
         supabase
-          .from("privacy_audit")
+          .from("privacy_audit" as never)
           .select("rejection_reason")
           .gte("created_at", sevenDaysAgo),
       ]);
 
       const reasonCounts: Record<string, number> = {};
       if (byReason.data) {
-        for (const entry of byReason.data) {
+        for (const entry of byReason.data as { rejection_reason: string }[]) {
           const reason = entry.rejection_reason;
           reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
         }

@@ -1,4 +1,5 @@
 import { StatusIndicator } from "./StatusIndicator";
+import { OperatorHeader } from "./OperatorHeader";
 
 interface SystemHeaderProps {
   systemStatus: "online" | "warning" | "error" | "offline";
@@ -14,10 +15,10 @@ export function SystemHeader({ systemStatus, version }: SystemHeaderProps) {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded bg-primary/20 flex items-center justify-center">
-              <span className="font-mono text-primary text-sm font-bold">A</span>
+              <span className="font-mono text-primary text-sm font-bold">S</span>
             </div>
             <div>
-              <h1 className="font-mono text-sm font-semibold text-foreground tracking-tight">ANALYTICS_NODE</h1>
+              <h1 className="font-mono text-sm font-semibold text-foreground tracking-tight">STRATUM</h1>
               <p className="font-mono text-[10px] text-muted-foreground">{version}</p>
             </div>
           </div>
@@ -33,6 +34,8 @@ export function SystemHeader({ systemStatus, version }: SystemHeaderProps) {
             <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-glow" />
             <span className="font-mono text-[10px] text-muted-foreground uppercase">Live</span>
           </div>
+          <div className="h-6 w-px bg-border" />
+          <OperatorHeader />
         </div>
       </div>
     </header>

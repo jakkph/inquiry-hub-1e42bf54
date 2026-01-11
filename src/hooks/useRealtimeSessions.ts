@@ -1,9 +1,20 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 
-type Session = Database["public"]["Tables"]["sessions"]["Row"];
-type Event = Database["public"]["Tables"]["events"]["Row"];
+interface SessionRow {
+  session_id: string;
+  entry_path: string;
+  referrer_type: string;
+  device_type: string | null;
+  browser_family: string | null;
+  started_at: string;
+}
+
+interface EventRow {
+  session_id: string;
+  event_type: string;
+  created_at: string;
+}
 
 export interface RealtimeSession {
   session_id: string;
@@ -27,7 +38,7 @@ export function useRealtimeSessions(maxSessions = 10) {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     
     const { data: sessionsData, error } = await supabase
-      .from("sessions")
+      .from("sessions" as never)
       .select("*")
       .gte("started_at", oneHourAgo)
       .order("started_at", { ascending: false })
@@ -39,17 +50,19 @@ export function useRealtimeSessions(maxSessions = 10) {
     }
 
     if (sessionsData) {
+      const typedSessions = sessionsData as SessionRow[];
       // Get event counts for each session
-      const sessionIds = sessionsData.map(s => s.session_id);
+      const sessionIds = typedSessions.map(s => s.session_id);
       const { data: eventsData } = await supabase
-        .from("events")
+        .from("events" as never)
         .select("session_id, event_type, created_at")
         .in("session_id", sessionIds)
         .order("created_at", { ascending: false });
 
+      const typedEvents = (eventsData || []) as EventRow[];
       const eventsBySession = new Map<string, { count: number; lastType: string; lastAt: string }>();
       
-      eventsData?.forEach(event => {
+      typedEvents.forEach(event => {
         const existing = eventsBySession.get(event.session_id);
         if (!existing) {
           eventsBySession.set(event.session_id, {
@@ -62,7 +75,7 @@ export function useRealtimeSessions(maxSessions = 10) {
         }
       });
 
-      const enrichedSessions: RealtimeSession[] = sessionsData.map(session => {
+      const enrichedSessions: RealtimeSession[] = typedSessions.map(session => {
         const eventInfo = eventsBySession.get(session.session_id);
         return {
           session_id: session.session_id,
@@ -96,8 +109,7 @@ export function useRealtimeSessions(maxSessions = 10) {
           table: "sessions",
         },
         (payload) => {
-          console.log("New session:", payload.new);
-          const newSession = payload.new as Session;
+          const newSession = payload.new as SessionRow;
           
           setSessions(prev => {
             const enrichedSession: RealtimeSession = {
@@ -112,7 +124,6 @@ export function useRealtimeSessions(maxSessions = 10) {
               last_event_at: null,
             };
             
-            // Add to front, keep only maxSessions
             const updated = [enrichedSession, ...prev].slice(0, maxSessions);
             return updated;
           });
@@ -120,7 +131,6 @@ export function useRealtimeSessions(maxSessions = 10) {
         }
       )
       .subscribe((status) => {
-        console.log("Sessions channel status:", status);
         setIsConnected(status === "SUBSCRIBED");
       });
 
@@ -135,8 +145,7 @@ export function useRealtimeSessions(maxSessions = 10) {
           table: "events",
         },
         (payload) => {
-          console.log("New event:", payload.new);
-          const newEvent = payload.new as Event;
+          const newEvent = payload.new as EventRow;
           
           setSessions(prev => {
             return prev.map(session => {
@@ -154,9 +163,7 @@ export function useRealtimeSessions(maxSessions = 10) {
           setLastUpdate(new Date());
         }
       )
-      .subscribe((status) => {
-        console.log("Events channel status:", status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(sessionsChannel);
