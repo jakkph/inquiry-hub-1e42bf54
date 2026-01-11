@@ -14,7 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          operator_alias: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          operator_alias?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          operator_alias?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      query_history: {
+        Row: {
+          created_at: string
+          id: string
+          operator_id: string
+          query_input: string
+          response_constraint: string | null
+          response_diagnostics: Json | null
+          response_signal: string | null
+          response_strategic_vector: string | null
+          response_structural_risk: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          operator_id: string
+          query_input: string
+          response_constraint?: string | null
+          response_diagnostics?: Json | null
+          response_signal?: string | null
+          response_strategic_vector?: string | null
+          response_structural_risk?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          operator_id?: string
+          query_input?: string
+          response_constraint?: string | null
+          response_diagnostics?: Json | null
+          response_signal?: string | null
+          response_strategic_vector?: string | null
+          response_structural_risk?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "query_history_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

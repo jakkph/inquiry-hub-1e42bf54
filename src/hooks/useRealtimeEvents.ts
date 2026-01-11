@@ -22,7 +22,7 @@ export function useRealtimeEvents() {
   // Fetch initial recent events
   const fetchInitialEvents = useCallback(async () => {
     const { data, error } = await supabase
-      .from("events")
+      .from("events" as never)
       .select("event_id, event_type, session_id, page_path, depth, dwell_seconds, rage_intensity, pause_seconds, created_at")
       .order("created_at", { ascending: false })
       .limit(MAX_EVENTS);
