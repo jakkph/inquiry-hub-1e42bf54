@@ -10,87 +10,200 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
-      profiles: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      contact_inquiries: {
         Row: {
           created_at: string
+          email: string
           id: string
-          operator_alias: string | null
+          inquiry: string
+          name: string
+          organization: string | null
+          role: string | null
+          status: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          id: string
-          operator_alias?: string | null
+          email: string
+          id?: string
+          inquiry: string
+          name: string
+          organization?: string | null
+          role?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          email?: string
           id?: string
-          operator_alias?: string | null
+          inquiry?: string
+          name?: string
+          organization?: string | null
+          role?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
       }
-      query_history: {
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_payment_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
         Row: {
           created_at: string
           id: string
-          operator_id: string
-          query_input: string
-          response_constraint: string | null
-          response_diagnostics: Json | null
-          response_signal: string | null
-          response_strategic_vector: string | null
-          response_structural_risk: string | null
-          status: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          operator_id: string
-          query_input: string
-          response_constraint?: string | null
-          response_diagnostics?: Json | null
-          response_signal?: string | null
-          response_strategic_vector?: string | null
-          response_structural_risk?: string | null
-          status?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          operator_id?: string
-          query_input?: string
-          response_constraint?: string | null
-          response_diagnostics?: Json | null
-          response_signal?: string | null
-          response_strategic_vector?: string | null
-          response_structural_risk?: string | null
-          status?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "query_history_operator_id_fkey"
-            columns: ["operator_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      log_audit: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_resource_id?: string
+          p_resource_type: string
+        }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "analyst" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -217,6 +330,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "analyst", "viewer"],
+    },
   },
 } as const

@@ -1,5 +1,7 @@
 import { StatusIndicator } from "./StatusIndicator";
 import { OperatorHeader } from "./OperatorHeader";
+import { NotificationBell } from "./NotificationBell";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SystemHeaderProps {
   systemStatus: "online" | "warning" | "error" | "offline";
@@ -8,6 +10,7 @@ interface SystemHeaderProps {
 
 export function SystemHeader({ systemStatus, version }: SystemHeaderProps) {
   const currentTime = new Date().toISOString().replace("T", " ").slice(0, 19);
+  const { user } = useAuth();
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm">
@@ -35,6 +38,7 @@ export function SystemHeader({ systemStatus, version }: SystemHeaderProps) {
             <span className="font-mono text-[10px] text-muted-foreground uppercase">Live</span>
           </div>
           <div className="h-6 w-px bg-border" />
+          {user && <NotificationBell />}
           <OperatorHeader />
         </div>
       </div>

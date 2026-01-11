@@ -11,9 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSectionTracking } from "@/hooks/useAnalytics";
 import { useSaveQuery, QueryHistoryEntry } from "@/hooks/useQueryHistory";
+import { useStrategicAnalysis, AnalysisResult } from "@/hooks/useStrategicAnalysis";
+import { useLogAudit } from "@/hooks/useAuditLog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Save, Send } from "lucide-react";
+import { Save, Send, Loader2 } from "lucide-react";
 
 const SAMPLE_PAYLOADS = {
   session_start: {
@@ -73,27 +75,16 @@ const EVENT_DEFINITIONS = [
   { type: "contact_intent", required: "-", bounds: "-" },
 ];
 
-// Mock system response
-const MOCK_RESPONSE = {
-  signal: "Primary constraint identified: dependency chain creates cascading failure risk",
-  constraint: "Resource allocation bottleneck at processing layer limits throughput ceiling",
-  structural_risk: "Current architecture couples critical paths, preventing independent scaling",
-  strategic_vector: "Decouple processing units before scaling horizontally to maintain resilience",
-  diagnostics: {
-    confidence: 0.87,
-    analysis_depth: "structural",
-    secondary_effects: ["latency variance", "cache invalidation complexity"]
-  }
-};
-
 export default function Index() {
   const [currentTime, setCurrentTime] = useState(new Date().toISOString());
   const [queryInput, setQueryInput] = useState("");
-  const [showResponse, setShowResponse] = useState(false);
+  const [displayedResult, setDisplayedResult] = useState<AnalysisResult | null>(null);
   const [selectedQuery, setSelectedQuery] = useState<QueryHistoryEntry | null>(null);
   
   const { user } = useAuth();
   const saveQuery = useSaveQuery();
+  const { analyze, isLoading } = useStrategicAnalysis();
+  const logAudit = useLogAudit();
 
   // Section tracking refs for dwell time measurement
   const metricsRef = useSectionTracking("index_metrics");
@@ -109,35 +100,66 @@ export default function Index() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmitQuery = () => {
-    if (!queryInput.trim()) return;
-    setShowResponse(true);
+  const handleSubmitQuery = async () => {
+    if (!queryInput.trim() || isLoading) return;
     
-    // Save query if authenticated
+    setSelectedQuery(null);
+    
+    // Log the query submission
     if (user) {
-      saveQuery.mutate({
-        query_input: queryInput,
-        response_signal: MOCK_RESPONSE.signal,
-        response_constraint: MOCK_RESPONSE.constraint,
-        response_structural_risk: MOCK_RESPONSE.structural_risk,
-        response_strategic_vector: MOCK_RESPONSE.strategic_vector,
-        response_diagnostics: MOCK_RESPONSE.diagnostics,
-        status: "complete",
-      }, {
-        onSuccess: () => {
-          toast.success("Query archived.");
-        },
-        onError: () => {
-          toast.error("Archive failed.");
-        }
+      logAudit.mutate({
+        action: "query_submitted",
+        resourceType: "strategic_analysis",
+        details: { query_length: queryInput.length },
       });
+    }
+
+    const result = await analyze(queryInput);
+    
+    if (result) {
+      setDisplayedResult(result);
+      
+      // Save query if authenticated
+      if (user) {
+        saveQuery.mutate({
+          query_input: queryInput,
+          response_signal: result.signal,
+          response_constraint: result.constraint,
+          response_structural_risk: result.structural_risk,
+          response_strategic_vector: result.strategic_vector,
+          response_diagnostics: result.diagnostics,
+          status: "complete",
+        }, {
+          onSuccess: () => {
+            toast.success("Query archived.");
+          },
+          onError: () => {
+            toast.error("Archive failed.");
+          }
+        });
+      }
     }
   };
 
   const handleSelectQuery = (query: QueryHistoryEntry) => {
     setSelectedQuery(query);
     setQueryInput(query.query_input);
-    setShowResponse(query.status === "complete");
+    
+    if (query.status === "complete" && query.response_signal) {
+      setDisplayedResult({
+        signal: query.response_signal,
+        constraint: query.response_constraint || "",
+        structural_risk: query.response_structural_risk || "",
+        strategic_vector: query.response_strategic_vector || "",
+        diagnostics: (query.response_diagnostics as AnalysisResult["diagnostics"]) || {
+          confidence: 0,
+          analysis_depth: "surface",
+          secondary_effects: []
+        }
+      });
+    } else {
+      setDisplayedResult(null);
+    }
   };
 
   return (
@@ -153,7 +175,7 @@ export default function Index() {
               <div>
                 <p className="font-mono text-sm text-foreground">System initialized. Awaiting input.</p>
                 <p className="font-mono text-xs text-muted-foreground mt-1">
-                  Strategic analysis and diagnostic processing active.
+                  Strategic analysis powered by Gemini 2.5 Flash.
                 </p>
               </div>
             </div>
@@ -186,6 +208,7 @@ export default function Index() {
                 onChange={(e) => setQueryInput(e.target.value)}
                 placeholder="Enter strategic problem, constraint, or system state for analysis..."
                 className="font-mono text-sm bg-secondary/30 border-border min-h-[120px] resize-none"
+                disabled={isLoading}
               />
               
               <div className="flex items-center justify-between mt-4">
@@ -194,51 +217,65 @@ export default function Index() {
                 </p>
                 <Button
                   onClick={handleSubmitQuery}
-                  disabled={!queryInput.trim()}
+                  disabled={!queryInput.trim() || isLoading}
                   className="font-mono text-xs gap-2"
                 >
-                  <Send className="h-3 w-3" />
-                  Process Query
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-3 w-3" />
+                      Process Query
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
 
             {/* Response Display */}
-            {showResponse && (
+            {displayedResult && (
               <div className="border border-primary/30 rounded-md bg-card/50 p-6 space-y-6">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-signal-nominal animate-pulse" />
                   <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     Analysis Complete
                   </span>
+                  {displayedResult.diagnostics?.confidence && (
+                    <span className="ml-auto font-mono text-[10px] text-primary">
+                      Confidence: {(displayedResult.diagnostics.confidence * 100).toFixed(0)}%
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-4">
                   <div className="border-l-2 border-primary pl-4">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-primary">Signal</span>
                     <p className="font-mono text-sm text-foreground mt-1">
-                      {selectedQuery?.response_signal || MOCK_RESPONSE.signal}
+                      {displayedResult.signal}
                     </p>
                   </div>
 
                   <div className="border-l-2 border-signal-warning pl-4">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-signal-warning">Constraint</span>
                     <p className="font-mono text-sm text-foreground mt-1">
-                      {selectedQuery?.response_constraint || MOCK_RESPONSE.constraint}
+                      {displayedResult.constraint}
                     </p>
                   </div>
 
                   <div className="border-l-2 border-signal-critical pl-4">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-signal-critical">Structural Risk</span>
                     <p className="font-mono text-sm text-foreground mt-1">
-                      {selectedQuery?.response_structural_risk || MOCK_RESPONSE.structural_risk}
+                      {displayedResult.structural_risk}
                     </p>
                   </div>
 
                   <div className="border-l-2 border-signal-nominal pl-4">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-signal-nominal">Strategic Vector</span>
                     <p className="font-mono text-sm text-foreground mt-1">
-                      {selectedQuery?.response_strategic_vector || MOCK_RESPONSE.strategic_vector}
+                      {displayedResult.strategic_vector}
                     </p>
                   </div>
                 </div>
@@ -247,11 +284,7 @@ export default function Index() {
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Diagnostics</span>
                   <CodeBlock
                     title="System Metadata"
-                    code={JSON.stringify(
-                      selectedQuery?.response_diagnostics || MOCK_RESPONSE.diagnostics, 
-                      null, 
-                      2
-                    )}
+                    code={JSON.stringify(displayedResult.diagnostics, null, 2)}
                   />
                 </div>
               </div>
