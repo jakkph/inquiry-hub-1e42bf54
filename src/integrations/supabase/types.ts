@@ -10,77 +10,81 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
-      profiles: {
+      contact_inquiries: {
         Row: {
           created_at: string
+          email: string
           id: string
-          operator_alias: string | null
+          inquiry: string
+          name: string
+          organization: string | null
+          role: string | null
+          status: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          id: string
-          operator_alias?: string | null
+          email: string
+          id?: string
+          inquiry: string
+          name: string
+          organization?: string | null
+          role?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          email?: string
           id?: string
-          operator_alias?: string | null
+          inquiry?: string
+          name?: string
+          organization?: string | null
+          role?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
       }
-      query_history: {
+      payments: {
         Row: {
+          amount: number
           created_at: string
+          currency: string
           id: string
-          operator_id: string
-          query_input: string
-          response_constraint: string | null
-          response_diagnostics: Json | null
-          response_signal: string | null
-          response_strategic_vector: string | null
-          response_structural_risk: string | null
+          metadata: Json | null
           status: string
+          stripe_customer_id: string | null
+          stripe_payment_id: string
+          updated_at: string
         }
         Insert: {
+          amount: number
           created_at?: string
+          currency?: string
           id?: string
-          operator_id: string
-          query_input: string
-          response_constraint?: string | null
-          response_diagnostics?: Json | null
-          response_signal?: string | null
-          response_strategic_vector?: string | null
-          response_structural_risk?: string | null
+          metadata?: Json | null
           status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_id: string
+          updated_at?: string
         }
         Update: {
+          amount?: number
           created_at?: string
+          currency?: string
           id?: string
-          operator_id?: string
-          query_input?: string
-          response_constraint?: string | null
-          response_diagnostics?: Json | null
-          response_signal?: string | null
-          response_strategic_vector?: string | null
-          response_structural_risk?: string | null
+          metadata?: Json | null
           status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_id?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "query_history_operator_id_fkey"
-            columns: ["operator_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
