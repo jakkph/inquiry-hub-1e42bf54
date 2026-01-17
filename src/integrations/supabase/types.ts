@@ -179,6 +179,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          created_at: string
+          id: string
+          notification_anomalies: boolean | null
+          notification_privacy_alerts: boolean | null
+          notification_system_updates: boolean | null
+          notifications_enabled: boolean | null
+          operator_alias: string | null
+          theme: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_anomalies?: boolean | null
+          notification_privacy_alerts?: boolean | null
+          notification_system_updates?: boolean | null
+          notifications_enabled?: boolean | null
+          operator_alias?: string | null
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_anomalies?: boolean | null
+          notification_privacy_alerts?: boolean | null
+          notification_system_updates?: boolean | null
+          notifications_enabled?: boolean | null
+          operator_alias?: string | null
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

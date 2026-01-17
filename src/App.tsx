@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import PrivacyAudit from "./pages/PrivacyAudit";
 import AuditTrail from "./pages/AuditTrail";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useAnalytics } from "./hooks/useAnalytics";
@@ -24,6 +25,7 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/privacy-audit" element={<PrivacyAudit />} />
       <Route path="/audit-trail" element={<AuditTrail />} />
+      <Route path="/settings" element={<Settings />} />
       <Route path="/auth" element={<Auth />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
