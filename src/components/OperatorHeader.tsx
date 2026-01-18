@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, Terminal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +41,12 @@ export function OperatorHeader() {
           <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
             <Settings className="h-3 w-3" />
             <span className="text-xs">Settings</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/api-docs" className="flex items-center gap-2 cursor-pointer">
+            <Terminal className="h-3 w-3" />
+            <span className="text-xs">API Docs</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
