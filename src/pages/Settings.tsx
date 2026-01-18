@@ -3,6 +3,7 @@ import { SystemHeader } from "@/components/SystemHeader";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserSettings, useUpdateSettings } from "@/hooks/useUserSettings";
+import { useIsAdmin } from "@/hooks/useUserRoles";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Palette, Save, Loader2 } from "lucide-react";
+import { User, Bell, Palette, Save, Loader2, ShieldCheck } from "lucide-react";
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { data: settings, isLoading: settingsLoading } = useUserSettings();
   const updateSettings = useUpdateSettings();
+  const { hasRole: isAdmin } = useIsAdmin();
 
   // Local form state
   const [operatorAlias, setOperatorAlias] = useState("");
@@ -262,6 +264,41 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin Section */}
+        {isAdmin && (
+          <Card className="border-destructive/30 bg-card">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded bg-destructive/20 flex items-center justify-center">
+                  <ShieldCheck className="h-4 w-4 text-destructive" />
+                </div>
+                <div>
+                  <CardTitle className="font-mono text-sm">Administration</CardTitle>
+                  <CardDescription className="font-mono text-xs">
+                    Manage system settings and user access
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Link to="/admin/roles">
+                <Button variant="outline" className="font-mono text-sm w-full justify-start gap-2">
+                  <ShieldCheck className="h-4 w-4" />
+                  Role Management
+                  <span className="ml-auto text-muted-foreground">→</span>
+                </Button>
+              </Link>
+              <Link to="/audit-trail">
+                <Button variant="outline" className="font-mono text-sm w-full justify-start gap-2 mt-2">
+                  <User className="h-4 w-4" />
+                  Audit Trail
+                  <span className="ml-auto text-muted-foreground">→</span>
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Save Button */}
         <div className="flex justify-end">
