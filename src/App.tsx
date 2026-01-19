@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useAnalytics } from "./hooks/useAnalytics";
 import { AuthProvider } from "./contexts/AuthContext";
+import { CommandPalette } from "./components/CommandPalette";
 
 const queryClient = new QueryClient();
 
@@ -23,19 +24,22 @@ const AppRoutes = () => {
   useAnalytics({ debug: import.meta.env.DEV });
   
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/privacy-audit" element={<PrivacyAudit />} />
-      <Route path="/audit-trail" element={<AuditTrail />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/admin/roles" element={<AdminRoles />} />
-      <Route path="/api-docs" element={<ApiDocs />} />
-      <Route path="/webhooks" element={<Webhooks />} />
-      <Route path="/auth" element={<Auth />} />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <CommandPalette />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/privacy-audit" element={<PrivacyAudit />} />
+        <Route path="/audit-trail" element={<AuditTrail />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/admin/roles" element={<AdminRoles />} />
+        <Route path="/api-docs" element={<ApiDocs />} />
+        <Route path="/webhooks" element={<Webhooks />} />
+        <Route path="/auth" element={<Auth />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 };
 
