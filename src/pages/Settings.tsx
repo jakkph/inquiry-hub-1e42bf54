@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Palette, Save, Loader2, ShieldCheck } from "lucide-react";
+import { User, Bell, Palette, Save, Loader2, ShieldCheck, Webhook } from "lucide-react";
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
@@ -262,6 +262,32 @@ export default function Settings() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Integrations */}
+        <Card className="border-border bg-card">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded bg-primary/20 flex items-center justify-center">
+                <Webhook className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="font-mono text-sm">Integrations</CardTitle>
+                <CardDescription className="font-mono text-xs">
+                  Configure external integrations and webhooks
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Link to="/webhooks">
+              <Button variant="outline" className="font-mono text-sm w-full justify-start gap-2">
+                <Webhook className="h-4 w-4" />
+                Webhook Configuration
+                <span className="ml-auto text-muted-foreground">→</span>
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 

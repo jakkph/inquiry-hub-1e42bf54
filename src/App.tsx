@@ -10,6 +10,7 @@ import AuditTrail from "./pages/AuditTrail";
 import Settings from "./pages/Settings";
 import AdminRoles from "./pages/AdminRoles";
 import ApiDocs from "./pages/ApiDocs";
+import Webhooks from "./pages/Webhooks";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useAnalytics } from "./hooks/useAnalytics";
@@ -30,6 +31,7 @@ const AppRoutes = () => {
       <Route path="/settings" element={<Settings />} />
       <Route path="/admin/roles" element={<AdminRoles />} />
       <Route path="/api-docs" element={<ApiDocs />} />
+      <Route path="/webhooks" element={<Webhooks />} />
       <Route path="/auth" element={<Auth />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
