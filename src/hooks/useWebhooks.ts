@@ -129,23 +129,27 @@ export function useDeleteWebhook() {
 export function useTestWebhook() {
   return useMutation({
     mutationFn: async (webhook: Webhook) => {
-      // Simulate a test webhook call
-      const testPayload = {
-        event: "test.ping",
-        timestamp: new Date().toISOString(),
-        data: { message: "This is a test webhook payload" },
-      };
+      const { data, error } = await supabase.functions.invoke("deliver-webhook", {
+        body: {
+          event_type: "test.ping",
+          data: { 
+            message: "This is a test webhook payload",
+            webhook_name: webhook.name,
+            test: true,
+          },
+          webhook_id: webhook.id,
+        },
+      });
 
-      // In a real implementation, this would call an edge function
-      // For now, we'll simulate success/failure
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Random success for demo
-      if (Math.random() > 0.2) {
-        return { success: true, statusCode: 200 };
-      } else {
+      if (error) {
+        throw new Error(error.message || "Failed to deliver webhook");
+      }
+
+      if (data?.failure_count > 0) {
         throw new Error("Webhook endpoint returned error");
       }
+
+      return data;
     },
     onSuccess: () => {
       toast.success("Test webhook sent successfully");
