@@ -62,6 +62,7 @@ import {
   WEBHOOK_EVENTS,
   Webhook as WebhookType,
 } from "@/hooks/useWebhooks";
+import { WebhookDeliveryLogs } from "@/components/WebhookDeliveryLogs";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -462,6 +463,11 @@ export default function Webhooks() {
             )}
           </CardContent>
         </Card>
+
+        {/* Delivery Logs */}
+        <div className="mt-8">
+          <WebhookDeliveryLogs />
+        </div>
 
         {/* Event Types Reference */}
         <Card className="border-border/50 mt-8">
