@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.deliver-webhook]
 verify_jwt = false
+
+[functions.run-scheduled-export]
+verify_jwt = false

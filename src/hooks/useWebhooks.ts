@@ -17,13 +17,47 @@ export interface Webhook {
   updated_at: string;
 }
 
-export const WEBHOOK_EVENTS = [
-  { id: "analytics.session.start", label: "Session Started", description: "Triggered when a new session begins" },
-  { id: "analytics.session.end", label: "Session Ended", description: "Triggered when a session ends" },
-  { id: "analytics.anomaly.detected", label: "Anomaly Detected", description: "Triggered when an anomaly is detected" },
-  { id: "privacy.audit.complete", label: "Privacy Audit Complete", description: "Triggered when a privacy audit finishes" },
-  { id: "system.alert", label: "System Alert", description: "Triggered for system-level alerts" },
+export const WEBHOOK_EVENT_CATEGORIES = [
+  {
+    category: "Sessions",
+    events: [
+      { id: "session_start", label: "Session Started", description: "Triggered when a new session begins" },
+      { id: "session_end", label: "Session Ended", description: "Triggered when a session ends" },
+      { id: "early_exit", label: "Early Exit", description: "User left before engaging with content" },
+    ],
+  },
+  {
+    category: "User Behavior",
+    events: [
+      { id: "page_view", label: "Page View", description: "User views a page" },
+      { id: "scroll_depth", label: "Scroll Depth", description: "User scrolls to a certain depth" },
+      { id: "section_dwell", label: "Section Dwell", description: "User spends time on a section" },
+      { id: "rage_scroll", label: "Rage Scroll", description: "Rapid scrolling indicating frustration" },
+      { id: "pause_reading", label: "Pause Reading", description: "User pauses while reading content" },
+    ],
+  },
+  {
+    category: "Engagement",
+    events: [
+      { id: "contact_intent", label: "Contact Intent", description: "User shows intent to contact" },
+      { id: "cta_click", label: "CTA Click", description: "User clicks a call-to-action" },
+      { id: "form_submit", label: "Form Submit", description: "User submits a form" },
+    ],
+  },
+  {
+    category: "System",
+    events: [
+      { id: "analytics.anomaly.detected", label: "Anomaly Detected", description: "Triggered when an anomaly is detected" },
+      { id: "privacy.audit.complete", label: "Privacy Audit Complete", description: "Triggered when a privacy audit finishes" },
+      { id: "system.alert", label: "System Alert", description: "Triggered for system-level alerts" },
+    ],
+  },
 ] as const;
+
+// Flatten events for backward compatibility
+export const WEBHOOK_EVENTS = WEBHOOK_EVENT_CATEGORIES.flatMap(cat => 
+  cat.events.map(e => ({ ...e, category: cat.category }))
+);
 
 export function useWebhooks() {
   const { user } = useAuth();

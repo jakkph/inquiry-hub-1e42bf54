@@ -60,9 +60,11 @@ import {
   useDeleteWebhook,
   useTestWebhook,
   WEBHOOK_EVENTS,
+  WEBHOOK_EVENT_CATEGORIES,
   Webhook as WebhookType,
 } from "@/hooks/useWebhooks";
 import { WebhookDeliveryLogs } from "@/components/WebhookDeliveryLogs";
+import { WebhookHealthDashboard } from "@/components/WebhookHealthDashboard";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -465,11 +467,17 @@ export default function Webhooks() {
         </Card>
 
         {/* Delivery Logs */}
+        {/* Webhook Health Dashboard */}
+        <div className="mt-8">
+          <WebhookHealthDashboard />
+        </div>
+
+        {/* Delivery Logs */}
         <div className="mt-8">
           <WebhookDeliveryLogs />
         </div>
 
-        {/* Event Types Reference */}
+        {/* Event Types Reference - Categorized */}
         <Card className="border-border/50 mt-8">
           <CardHeader>
             <CardTitle className="font-mono flex items-center gap-2">
@@ -481,17 +489,26 @@ export default function Webhooks() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {WEBHOOK_EVENTS.map((event) => (
-                <div
-                  key={event.id}
-                  className="p-4 border border-border/50 rounded-lg bg-card"
-                >
-                  <code className="text-sm font-mono text-primary">{event.id}</code>
-                  <h4 className="font-medium mt-1">{event.label}</h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {event.description}
-                  </p>
+            <div className="space-y-6">
+              {WEBHOOK_EVENT_CATEGORIES.map((category) => (
+                <div key={category.category}>
+                  <h3 className="text-sm font-mono text-muted-foreground mb-3 uppercase tracking-wide">
+                    {category.category}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {category.events.map((event) => (
+                      <div
+                        key={event.id}
+                        className="p-3 border border-border/50 rounded-lg bg-card hover:border-primary/30 transition-colors"
+                      >
+                        <code className="text-xs font-mono text-primary">{event.id}</code>
+                        <h4 className="font-medium text-sm mt-1">{event.label}</h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {event.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -601,23 +618,32 @@ function WebhookForm({
 
       <div className="space-y-2">
         <Label>Events *</Label>
-        <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border border-border rounded-lg p-3">
-          {WEBHOOK_EVENTS.map((event) => (
-            <div key={event.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={event.id}
-                checked={events.includes(event.id)}
-                onCheckedChange={() => toggleEvent(event.id)}
-              />
-              <label
-                htmlFor={event.id}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-              >
-                {event.label}
-                <span className="text-xs text-muted-foreground ml-2 font-mono">
-                  ({event.id})
-                </span>
-              </label>
+        <div className="max-h-64 overflow-y-auto border border-border rounded-lg p-3 space-y-4">
+          {WEBHOOK_EVENT_CATEGORIES.map((category) => (
+            <div key={category.category}>
+              <h4 className="text-xs font-mono text-muted-foreground uppercase tracking-wide mb-2">
+                {category.category}
+              </h4>
+              <div className="grid grid-cols-1 gap-1">
+                {category.events.map((event) => (
+                  <div key={event.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={event.id}
+                      checked={events.includes(event.id)}
+                      onCheckedChange={() => toggleEvent(event.id)}
+                    />
+                    <label
+                      htmlFor={event.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                    >
+                      {event.label}
+                      <span className="text-xs text-muted-foreground ml-2 font-mono">
+                        ({event.id})
+                      </span>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>

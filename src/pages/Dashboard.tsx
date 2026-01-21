@@ -10,6 +10,7 @@ import { ScrollDepthChart } from "@/components/dashboard/ScrollDepthChart";
 import { ReferrerBreakdown } from "@/components/dashboard/ReferrerBreakdown";
 import { SectionDwellHeatmap } from "@/components/dashboard/SectionDwellHeatmap";
 import { DataExport } from "@/components/DataExport";
+import { ScheduledExportManager } from "@/components/ScheduledExportManager";
 import { Link } from "react-router-dom";
 
 export default function Dashboard() {
@@ -72,7 +73,10 @@ export default function Dashboard() {
         <SectionDwellHeatmap />
 
         {/* Data Export */}
-        <DataExport />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DataExport />
+          <ScheduledExportManager />
+        </div>
 
         {/* Footer */}
         <footer className="border-t border-border pt-6 flex items-center justify-between">
