@@ -155,6 +155,51 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_exports: {
+        Row: {
+          created_at: string
+          data_type: string
+          email_to: string
+          format: string
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          name: string
+          next_run_at: string | null
+          schedule: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_type: string
+          email_to: string
+          format: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name: string
+          next_run_at?: string | null
+          schedule: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_type?: string
+          email_to?: string
+          format?: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name?: string
+          next_run_at?: string | null
+          schedule?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
