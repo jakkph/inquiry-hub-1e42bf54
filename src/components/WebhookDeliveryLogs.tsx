@@ -31,21 +31,60 @@ import {
   FileText,
   Timer,
   Zap,
+  RotateCcw,
 } from "lucide-react";
 import { useAllWebhookDeliveryLogs, WebhookDeliveryLog } from "@/hooks/useWebhookDeliveryLogs";
 import { useWebhooks } from "@/hooks/useWebhooks";
 import { formatDistanceToNow, format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function WebhookDeliveryLogs() {
-  const { data: logs, isLoading } = useAllWebhookDeliveryLogs();
+  const { data: logs, isLoading, refetch } = useAllWebhookDeliveryLogs();
   const { data: webhooks } = useWebhooks();
   const [selectedLog, setSelectedLog] = useState<(WebhookDeliveryLog & { webhooks: { name: string } | null }) | null>(null);
   const [filterWebhook, setFilterWebhook] = useState<string>("all");
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const filteredLogs = logs?.filter((log) => 
     filterWebhook === "all" || log.webhook_id === filterWebhook
   );
+
+  const handleRetry = async (log: WebhookDeliveryLog & { webhooks: { name: string } | null }) => {
+    setRetryingId(log.id);
+    
+    try {
+      const payload = log.payload as { event?: string; data?: Record<string, unknown> };
+      
+      const { data, error } = await supabase.functions.invoke("deliver-webhook", {
+        body: {
+          event_type: payload?.event || log.event_type,
+          data: payload?.data || {},
+          webhook_id: log.webhook_id,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Retry successful",
+        description: `Webhook "${log.webhooks?.name}" has been retried.`,
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error("Retry error:", error);
+      toast({
+        title: "Retry failed",
+        description: error instanceof Error ? error.message : "Failed to retry webhook delivery.",
+        variant: "destructive",
+      });
+    } finally {
+      setRetryingId(null);
+    }
+  };
 
   const getStatusColor = (status: number | null) => {
     if (!status) return "destructive";
@@ -173,7 +212,7 @@ export function WebhookDeliveryLogs() {
                   <TableHead className="font-mono">Status</TableHead>
                   <TableHead className="font-mono">Response Time</TableHead>
                   <TableHead className="font-mono">Attempted</TableHead>
-                  <TableHead className="font-mono text-right">Details</TableHead>
+                  <TableHead className="font-mono text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -211,14 +250,31 @@ export function WebhookDeliveryLogs() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedLog(log)}
-                        className="font-mono"
-                      >
-                        View
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        {!log.success && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRetry(log)}
+                            disabled={retryingId === log.id}
+                            className="font-mono text-orange-500 hover:text-orange-400"
+                          >
+                            {retryingId === log.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <RotateCcw className="h-3 w-3" />
+                            )}
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedLog(log)}
+                          className="font-mono"
+                        >
+                          View
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

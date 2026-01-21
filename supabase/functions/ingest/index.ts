@@ -387,11 +387,48 @@ Deno.serve(async (req) => {
         .eq('session_id', sessionId)
     }
 
-    // Trigger coherence computation (fire and forget)
+    // Trigger coherence computation and webhook delivery (fire and forget)
     EdgeRuntime.waitUntil(
       (async () => {
+        // Coherence computation
         const { error } = await supabase.rpc('compute_coherence', { p_session_id: sessionId })
         if (error) console.error('Coherence computation error:', error)
+        
+        // Trigger webhook delivery for this event
+        try {
+          const webhookPayload = {
+            event_type: payload.event_type,
+            data: {
+              session_id: sessionId,
+              event_type: payload.event_type,
+              page_path: payload.page_path,
+              section_id: payload.section_id,
+              depth: payload.depth,
+              dwell_seconds: payload.dwell_seconds,
+              pause_seconds: payload.pause_seconds,
+              rage_intensity: payload.rage_intensity,
+              timestamp: new Date().toISOString(),
+            }
+          }
+          
+          const webhookResponse = await fetch(
+            `${Deno.env.get('SUPABASE_URL')}/functions/v1/deliver-webhook`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              },
+              body: JSON.stringify(webhookPayload),
+            }
+          )
+          
+          if (!webhookResponse.ok) {
+            console.error('Webhook delivery trigger failed:', await webhookResponse.text())
+          }
+        } catch (webhookError) {
+          console.error('Webhook delivery error:', webhookError)
+        }
       })()
     )
 
